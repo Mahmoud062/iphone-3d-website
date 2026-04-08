@@ -7,7 +7,7 @@ import Footer from './components/Footer';
 
 import * as Sentry from '@sentry/react';
 
-const App = () => {
+function AppContent() {
   return (
     <main className="bg-black">
       <Navbar />
@@ -18,6 +18,8 @@ const App = () => {
       <Footer />
     </main>
   );
-};
+}
 
-export default Sentry.withProfiler(App);
+const App = Sentry.withProfiler(AppContent);
+
+export default App;
