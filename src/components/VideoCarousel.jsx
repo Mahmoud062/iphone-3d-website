@@ -133,6 +133,7 @@ const VideoCarousel = () => {
 
   return (
     <>
+      {/* VIDEO CAROUSEL SLIDER */}
       <div className='flex items-center'>
         {hightlightsSlides.map((list, i) => (
           <div key={list.id} id="slider" className='sm:pr-20 pr-10'>
@@ -160,22 +161,8 @@ const VideoCarousel = () => {
                 </video>
               </div>
 
+              {/* TEXT OVERLAY - appears on top of video */}
               <div className='absolute top-12 left-[5%] z-10'>
-                {hightlightsSlides.map((_, i) => (
-                  <div
-                    key={i}
-                    ref={(el) => (videoDivRef.current[i] = el)}
-                    className='h-3 w-4 md:w-52 rounded-full relative mr-5 bg-gray-200'
-                  >
-                    <span
-                      className='absolute h-full w-full rounded-full'
-                      ref={(el) => (videoSpanRef.current[i] = el)}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className='flex gap-10 relative z-10 -mt-16 md:-mt-20 max-md:justify-center max-md:items-center'>
                 {list.textLists.map((text, i) => (
                   <p key={i} className='md:text-2xl text-xl font-medium'>
                     {text}
@@ -187,27 +174,41 @@ const VideoCarousel = () => {
         ))}
       </div>
 
-      <div className='relative -mt-44 md:mt-40 flex justify-center items-center'>
-        {isLastVideo ? (
-          <button
-            onClick={() => handleProcess('video-reset')}
-            className='control-btn'
-          >
-            <img src={replayImg} alt='replay' width={23} height={23} />
-          </button>
-        ) : (
-          <button
-            onClick={() => handleProcess(isPlaying ? 'pause' : 'play')}
-            className='control-btn'
-          >
-            <img
-              src={isPlaying ? pauseImg : playImg}
-              alt={isPlaying ? 'pause' : 'play'}
-              width={23}
-              height={23}
-            />
-          </button>
-        )}
+      {/* PROGRESS INDICATORS AND CONTROLS */}
+      <div className='relative flex-center mt-10'>
+        {/* Progress bar controller */}
+        <div className='flex-center py-5 px-7 bg-gray-300 backdrop-blur rounded-full'>
+          {hightlightsSlides.map((_, i) => (
+            <span
+              key={i}
+              ref={(el) => (videoDivRef.current[i] = el)}
+              className='mx-2 w-3 h-3 bg-gray-200 rounded-full relative cursor-pointer'
+            >
+              {/* Progress fill span - grows as video plays */}
+              <span
+                className='absolute h-full w-full rounded-full'
+                ref={(el) => (videoSpanRef.current[i] = el)}
+              />
+            </span>
+          ))}
+        </div>
+
+        {/* Play/Pause/Replay Button */}
+        <button
+          onClick={() =>
+            isLastVideo
+              ? handleProcess('video-reset')
+              : handleProcess(isPlaying ? 'pause' : 'play')
+          }
+          className='control-btn'
+        >
+          <img
+            src={isLastVideo ? replayImg : isPlaying ? pauseImg : playImg}
+            alt={isLastVideo ? 'replay' : isPlaying ? 'pause' : 'play'}
+            width={23}
+            height={23}
+          />
+        </button>
       </div>
     </>
   );
