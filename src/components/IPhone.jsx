@@ -7,197 +7,204 @@ Title: Apple iPhone 15 Pro Max Black
 */
 
 import * as THREE from 'three';
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, memo } from "react";
 import { useGLTF, useTexture } from "@react-three/drei";
 
-function IPhone(props) {
-  // Load GLB model with nodes and materials
-  const { nodes, materials } = useGLTF("/models/scene.glb");
+/**
+ * iPhone 3D model component
+ * Memoized to prevent unnecessary Three.js re-renders
+ * Optimized with useMemo for material color map and texture updates
+ */
+const IPhone = memo(
+  function IPhone(props) {
+    // Load GLB model with nodes and materials
+    const { nodes, materials } = useGLTF("/models/scene.glb");
 
-  // Load texture image for phone back
-  const texture = useTexture(props.item.img);
+    // Load texture image for phone back
+    const texture = useTexture(props.item.img);
 
-  // Update material colors when model/color changes
-  useEffect(() => {
-    Object.entries(materials).map((material) => {
-      // These material IDs are for non-colorable parts (glass, camera, ports, etc.)
-      // Don't change their colors
-      if (
-        material[0] !== "zFdeDaGNRwzccye" &&
-        material[0] !== "ujsvqBWRMnqdwPx" &&
-        material[0] !== "hUlRcbieVuIiOXG" &&
-        material[0] !== "jlzuBkUzuJqgiAK" &&
-        material[0] !== "xNrofRCqOXXHVZt"
-      ) {
-        // Change colorable material to selected color
-        material[1].color = new THREE.Color(props.item.color[0]);
-      }
-      // Tell Three.js to update this material
-      material[1].needsUpdate = true;
-    });
-  }, [materials, props.item]);
+    // Memoize non-colorable material IDs to avoid object recreation
+    const nonColorableMaterials = useMemo(() => ({
+      'zFdeDaGNRwzccye': true,
+      'ujsvqBWRMnqdwPx': true,
+      'hUlRcbieVuIiOXG': true,
+      'jlzuBkUzuJqgiAK': true,
+      'xNrofRCqOXXHVZt': true,
+    }), []);
 
-  return (
-    <group {...props} dispose={null}>
-      {/* All mesh geometries from GLB - scaled 0.01x from original */}
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.ttmRoLdJipiIOmf.geometry}
-        material={materials.hUlRcbieVuIiOXG}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.DjsDkGiopeiEJZK.geometry}
-        material={materials.PaletteMaterial001}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.buRWvyqhBBgcJFo.geometry}
-        material={materials.PaletteMaterial002}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.MrMmlCAsAxJpYqQ_0.geometry}
-        material={materials.dxCVrUCvYhjVxqy}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.wqbHSzWaUxBCwxY_0.geometry}
-        material={materials.MHFGNLrDQbTNima}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.QvGDcbDApaGssma.geometry}
-        material={materials.kUhjpatHUvkBwfM}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.vFwJFNASGvEHWhs.geometry}
-        material={materials.RJoymvEsaIItifI}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.evAxFwhaQUwXuua.geometry}
-        material={materials.KSIxMqttXxxmOYl}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.USxQiqZgxHbRvqB.geometry}
-        material={materials.mcPrzcBUcdqUybC}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.TvgBVmqNmSrFVfW.geometry}
-        material={materials.pIhYLPqiSQOZTjn}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.GuYJryuYunhpphO.geometry}
-        material={materials.eShKpuMNVJTRrgg}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.pvdHknDTGDzVpwc.geometry}
-        material={materials.xdyiJLYTYRfJffH}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.CfghdUoyzvwzIum.geometry}
-        material={materials.jpGaQNgTtEGkTfo}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.DjdhycfQYjKMDyn.geometry}
-        material={materials.ujsvqBWRMnqdwPx}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.usFLmqcyrnltBUr.geometry}
-        material={materials.sxNzrmuTqVeaXdg}
-        scale={0.01}
-      />
-      {/* Phone back - uses texture image */}
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.xXDHkMplTIDAXLN.geometry}
-        material={materials.pIJKfZsazmcpEiU}
-        scale={0.01}
-      >
-        <meshStandardMaterial roughness={1} map={texture} />
-      </mesh>
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.vELORlCJixqPHsZ.geometry}
-        material={materials.zFdeDaGNRwzccye}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.EbQGKrWAqhBHiMv.geometry}
-        material={materials.TBLSREBUyLMVtJa}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.EddVrWkqZTlvmci.geometry}
-        material={materials.xNrofRCqOXXHVZt}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.KSWlaxBcnPDpFCs.geometry}
-        material={materials.yQQySPTfbEJufve}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.TakBsdEjEytCAMK.geometry}
-        material={materials.PaletteMaterial003}
-        scale={0.01}
-      />
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.IykfmVvLplTsTEW.geometry}
-        material={materials.PaletteMaterial004}
-        scale={0.01}
-      />
-      <mesh
+    // Update material colors when model/color changes
+    useEffect(() => {
+      Object.entries(materials).forEach((material) => {
+        // Skip non-colorable parts (glass, camera, ports, etc.)
+        if (!nonColorableMaterials[material[0]]) {
+          // Change colorable material to selected color
+          material[1].color.setStyle(props.item.color[0]);
+          material[1].needsUpdate = true;
+        }
+      });
+    }, [materials, props.item.color, nonColorableMaterials]);
+
+    return (
+      <group {...props} dispose={null}>
+        {/* All mesh geometries from GLB - scaled 0.01x from original */}
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.ttmRoLdJipiIOmf.geometry}
+          material={materials.hUlRcbieVuIiOXG}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.DjsDkGiopeiEJZK.geometry}
+          material={materials.PaletteMaterial001}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.buRWvyqhBBgcJFo.geometry}
+          material={materials.PaletteMaterial002}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.MrMmlCAsAxJpYqQ_0.geometry}
+          material={materials.dxCVrUCvYhjVxqy}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.wqbHSzWaUxBCwxY_0.geometry}
+          material={materials.MHFGNLrDQbTNima}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.QvGDcbDApaGssma.geometry}
+          material={materials.kUhjpatHUvkBwfM}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.vFwJFNASGvEHWhs.geometry}
+          material={materials.RJoymvEsaIItifI}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.evAxFwhaQUwXuua.geometry}
+          material={materials.KSIxMqttXxxmOYl}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.USxQiqZgxHbRvqB.geometry}
+          material={materials.mcPrzcBUcdqUybC}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.TvgBVmqNmSrFVfW.geometry}
+          material={materials.pIhYLPqiSQOZTjn}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.GuYJryuYunhpphO.geometry}
+          material={materials.eShKpuMNVJTRrgg}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.pvdHknDTGDzVpwc.geometry}
+          material={materials.xdyiJLYTYRfJffH}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.CfghdUoyzvwzIum.geometry}
+          material={materials.jpGaQNgTtEGkTfo}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.DjdhycfQYjKMDyn.geometry}
+          material={materials.ujsvqBWRMnqdwPx}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.usFLmqcyrnltBUr.geometry}
+          material={materials.sxNzrmuTqVeaXdg}
+          scale={0.01}
+        />
+        {/* Phone back - uses texture image */}
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.xXDHkMplTIDAXLN.geometry}
+          material={materials.pIJKfZsazmcpEiU}
+          scale={0.01}
+        >
+          <meshStandardMaterial roughness={1} map={texture} />
+        </mesh>
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.vELORlCJixqPHsZ.geometry}
+          material={materials.zFdeDaGNRwzccye}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.EbQGKrWAqhBHiMv.geometry}
+          material={materials.TBLSREBUyLMVtJa}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.EddVrWkqZTlvmci.geometry}
+          material={materials.xNrofRCqOXXHVZt}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.KSWlaxBcnPDpFCs.geometry}
+          material={materials.yQQySPTfbEJufve}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.TakBsdEjEytCAMK.geometry}
+          material={materials.PaletteMaterial003}
+          scale={0.01}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={nodes.IykfmVvLplTsTEW.geometry}
+          material={materials.PaletteMaterial004}
+          scale={0.01}
+        />
+        <mesh
         castShadow
         receiveShadow
         geometry={nodes.wLfSXtbwRlBrwof.geometry}
@@ -262,7 +269,18 @@ function IPhone(props) {
       />
     </group>
   );
-}
+  },
+  // Custom comparison - only re-render if item color or scale changes
+  (prevProps, nextProps) => {
+    return (
+      prevProps.item.color?.[0] === nextProps.item.color?.[0] &&
+      prevProps.item.img === nextProps.item.img &&
+      prevProps.scale === nextProps.scale
+    );
+  }
+);
+
+IPhone.displayName = 'IPhone';
 
 export default IPhone;
 

@@ -1,26 +1,32 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { hightlightsSlides } from '../constants';
 import gsap from 'gsap';
 import { pauseImg, playImg, replayImg } from '../utils';
 import { useGSAP } from '@gsap/react';
+import { useVideoCarouselState } from '../hooks/useVideoCarouselState';
 
 const VideoCarousel = () => {
   const videoRef = useRef([]);
   const videoSpanRef = useRef([]);
   const videoDivRef = useRef([]);
 
-  const [video, setVideo] = useState({
-    isEnd: false,
-    startPlay: false,
-    videoId: 0,
-    isLastVideo: false,
-    isPlaying: false,
-  });
+  // Use custom hook to manage video carousel state
+  // Replaces 6 separate useState pieces with single useReducer
+  // Automatically batches state updates for better performance
+  const {
+    state,
+    play,
+    pause,
+    nextVideo,
+    videoEnd,
+    videoLast,
+    reset,
+    setLoadedData,
+  } = useVideoCarouselState(hightlightsSlides.length);
 
-  const [loadedData, setLoadedData] = useState([]);
+  const { videoId, isPlaying, startPlay, isEnd, isLastVideo, loadedData } = state;
 
-  const { isEnd, startPlay, videoId, isLastVideo, isPlaying } = video;
-
+  // Animate slider position when video ID changes
   useGSAP(() => {
     gsap.to('#slider', {
       transform: `translateX(${-100 * videoId}%)`,
@@ -34,15 +40,12 @@ const VideoCarousel = () => {
         toggleActions: 'restart none none none',
       },
       onComplete: () => {
-        setVideo((pre) => ({
-          ...pre,
-          startPlay: true,
-          isPlaying: true,
-        }));
+        play();
       },
     });
-  }, [isEnd, videoId]);
+  }, [isEnd, videoId, play]);
 
+  // Handle progress bar animation and video progress tracking
   useEffect(() => {
     let currentProgress = 0;
     let span = videoSpanRef.current;
@@ -92,6 +95,7 @@ const VideoCarousel = () => {
     }
   }, [videoId, startPlay, isPlaying]);
 
+  // Control actual video playback based on state
   useEffect(() => {
     if (loadedData.length > 3) {
       if (!isPlaying) {
@@ -102,69 +106,55 @@ const VideoCarousel = () => {
     }
   }, [startPlay, videoId, isPlaying, loadedData]);
 
-  const handleProcess = (type, i) => {
+  // Unified handler for different video events
+  // Dispatches to appropriate reducer actions
+  const handleProcessEvent = (type, index) => {
     switch (type) {
       case 'video-end':
-        setVideo((pre) => ({ ...pre, isEnd: true, videoId: i + 1 }));
+        index !== hightlightsSlides.length - 1 ? nextVideo() : videoLast();
         break;
-
-      case 'video-last':
-        setVideo((pre) => ({ ...pre, isLastVideo: true }));
-        break;
-
-      case 'video-reset':
-        setVideo((pre) => ({ ...pre, isLastVideo: false, videoId: 0 }));
-        break;
-
       case 'play':
-        setVideo((pre) => ({ ...pre, isPlaying: !pre.isPlaying }));
+        play();
         break;
-
       case 'pause':
-        setVideo((pre) => ({ ...pre, isPlaying: !pre.isPlaying }));
+        pause();
         break;
-
+      case 'reset':
+        reset();
+        break;
       default:
-        return video;
+        break;
     }
   };
-
-  const handleLoadedMetaData = (i, e) => setLoadedData((pre) => [...pre, e]);
 
   return (
     <>
       {/* VIDEO CAROUSEL SLIDER */}
-      <div className='flex items-center'>
+      <div className="flex items-center" role="region" aria-label="Video highlights carousel">
         {hightlightsSlides.map((list, i) => (
-          <div key={list.id} id="slider" className='sm:pr-20 pr-10'>
-            <div className='video-carousel_container'>
-              <div className='w-full h-full flex-center rounded-3xl overflow-hidden bg-black'>
+          <div key={list.id} id="slider" className="sm:pr-20 pr-10">
+            <div className="video-carousel_container">
+              <div className="w-full h-full flex-center rounded-3xl overflow-hidden bg-black">
                 <video
                   id="video"
                   playsInline={true}
-                  preload='auto'
+                  preload="auto"
                   muted
                   className={`${list.id === 2 && 'translate-x-44'} pointer-events-none`}
                   ref={(el) => (videoRef.current[i] = el)}
-                  onEnded={() =>
-                    i !== 3 ? handleProcess('video-end', i) : handleProcess('video-last')
-                  }
-                  onPlay={() => {
-                    setVideo((prevVideo) => ({
-                      ...prevVideo,
-                      isPlaying: true,
-                    }));
-                  }}
-                  onLoadedMetadata={(e) => handleLoadedMetaData(i, e)}
+                  onEnded={() => handleProcessEvent('video-end', i)}
+                  onPlay={() => play()}
+                  onLoadedMetadata={(e) => setLoadedData([...loadedData, e])}
+                  aria-label={`Video highlight ${i + 1} of ${hightlightsSlides.length}`}
                 >
-                  <source src={list.video} type='video/mp4' />
+                  <source src={list.video} type="video/mp4" />
                 </video>
               </div>
 
               {/* TEXT OVERLAY - appears on top of video */}
-              <div className='absolute top-12 left-[5%] z-10'>
+              <div className="absolute top-12 left-[5%] z-10">
                 {list.textLists.map((text, i) => (
-                  <p key={i} className='md:text-2xl text-xl font-medium'>
+                  <p key={i} className="md:text-2xl text-xl font-medium">
                     {text}
                   </p>
                 ))}
@@ -175,21 +165,32 @@ const VideoCarousel = () => {
       </div>
 
       {/* PROGRESS INDICATORS AND CONTROLS */}
-      <div className='relative flex-center mt-10'>
+      <div className="relative flex-center mt-10">
         {/* Progress bar controller */}
-        <div className='flex-center py-5 px-7 bg-gray-300 backdrop-blur rounded-full'>
+        <div
+          className="flex-center py-5 px-7 bg-gray-300 backdrop-blur rounded-full"
+          role="group"
+          aria-label="Video progress indicators"
+        >
           {hightlightsSlides.map((_, i) => (
-            <span
+            <button
               key={i}
               ref={(el) => (videoDivRef.current[i] = el)}
-              className='mx-2 w-3 h-3 bg-gray-200 rounded-full relative cursor-pointer'
+              className="mx-2 w-3 h-3 bg-gray-200 rounded-full relative cursor-pointer transition-all"
+              onClick={() => {
+                videoRef.current[i]?.play();
+              }}
+              aria-label={`Go to video ${i + 1} of ${hightlightsSlides.length}`}
+              aria-current={videoId === i ? 'true' : 'false'}
+              role="tab"
             >
               {/* Progress fill span - grows as video plays */}
               <span
-                className='absolute h-full w-full rounded-full'
+                className="absolute h-full w-full rounded-full"
                 ref={(el) => (videoSpanRef.current[i] = el)}
+                aria-hidden="true"
               />
-            </span>
+            </button>
           ))}
         </div>
 
@@ -197,21 +198,24 @@ const VideoCarousel = () => {
         <button
           onClick={() =>
             isLastVideo
-              ? handleProcess('video-reset')
-              : handleProcess(isPlaying ? 'pause' : 'play')
+              ? handleProcessEvent('reset', 0)
+              : handleProcessEvent(isPlaying ? 'pause' : 'play', 0)
           }
-          className='control-btn'
+          className="control-btn"
+          aria-label={isLastVideo ? 'Replay video highlights' : isPlaying ? 'Pause video' : 'Play video'}
+          aria-pressed={isPlaying}
         >
           <img
             src={isLastVideo ? replayImg : isPlaying ? pauseImg : playImg}
-            alt={isLastVideo ? 'replay' : isPlaying ? 'pause' : 'play'}
+            alt=""
             width={23}
             height={23}
+            aria-hidden="true"
           />
         </button>
       </div>
     </>
-  );
+  );;
 };
 
 export default VideoCarousel;

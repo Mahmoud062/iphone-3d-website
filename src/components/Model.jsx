@@ -1,14 +1,14 @@
 import { useGSAP } from "@gsap/react"
 import gsap from "gsap";
 import ModelView from "./ModelView";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { yellowImg } from "../utils";
+import { useGSAPTimeline } from "../hooks/useGSAPTimeline";
 
 import * as THREE from 'three';
 import { Canvas } from "@react-three/fiber";
 import { View } from "@react-three/drei";
 import { models, sizes } from "../constants";
-import { animateWithGsapTimeline } from "../utils/animations";
 
 const Model = () => {
   // Current size selected: 'small' (6.1") or 'large' (6.7")
@@ -33,27 +33,28 @@ const Model = () => {
   const [smallRotation, setSmallRotation] = useState(0);
   const [largeRotation, setLargeRotation] = useState(0);
 
-  // GSAP timeline for carousel animation
-  const tl = gsap.timeline();
-
-  // When size changes, animate the swap
-  useEffect(() => {
-    if (size === 'large') {
-      // Swap to large model: small slides left (-100%), large comes in from right
-      animateWithGsapTimeline(tl, small, smallRotation, '#view1', '#view2', {
-        transform: 'translateX(-100%)',
-        duration: 2
-      });
-    }
-
-    if (size === 'small') {
-      // Swap to small model: large slides out right, small comes back
-      animateWithGsapTimeline(tl, large, largeRotation, '#view2', '#view1', {
-        transform: 'translateX(0)',
-        duration: 2
-      });
-    }
-  }, [size, smallRotation, largeRotation, tl]);
+  // Use custom hook to manage GSAP timeline safely
+  // Prevents timeline recreation on every render and handles cleanup
+  const { getTimeline } = useGSAPTimeline(
+    [
+      {
+        target: '#view1',
+        props: {
+          transform: size === 'large' ? 'translateX(-100%)' : 'translateX(0)',
+          duration: 2,
+        },
+      },
+      {
+        target: '#view2',
+        props: {
+          transform: size === 'large' ? 'translateX(0)' : 'translateX(100%)',
+          duration: 2,
+        },
+        position: 0, // Start at same time as view1
+      },
+    ],
+    [size] // Only re-animate when size actually changes
+  );
 
   // Animate section heading on mount
   useGSAP(() => {
@@ -113,37 +114,57 @@ const Model = () => {
           {/* Selectors: Color & Size */}
           <div className="mx-auto w-full">
             {/* Current model title */}
-            <p className="text-sm font-light text-center mb-5">{model.title}</p>
+            <p className="text-sm font-light text-center mb-5" id="model-description">
+              {model.title}
+            </p>
 
             <div className="flex-center">
               {/* Color selector - 4 color circles */}
-              <ul className="color-container">
+              <fieldset className="color-container" aria-labelledby="color-label">
+                <legend id="color-label" className="sr-only">
+                  iPhone color selection
+                </legend>
                 {models.map((item, i) => (
-                  <li
+                  <button
                     key={i}
-                    className="w-6 h-6 rounded-full mx-2 cursor-pointer"
-                    style={{ backgroundColor: item.color[0] }}
+                    className="w-6 h-6 rounded-full mx-2 cursor-pointer border-2 transition-all"
+                    style={{
+                      backgroundColor: item.color[0],
+                      borderColor: model.color[0] === item.color[0] ? 'white' : 'transparent',
+                      boxShadow:
+                        model.color[0] === item.color[0] ? '0 0 10px rgba(255,255,255,0.5)' : 'none',
+                    }}
                     onClick={() => setModel(item)}
+                    aria-label={`Select ${item.title}`}
+                    aria-pressed={model.color[0] === item.color[0]}
+                    role="radio"
+                    title={item.title}
                   />
                 ))}
-              </ul>
+              </fieldset>
 
               {/* Size selector - 6.1" and 6.7" buttons */}
-              <button className="size-btn-container">
+              <fieldset className="size-btn-container" aria-labelledby="size-label">
+                <legend id="size-label" className="sr-only">
+                  iPhone screen size selection
+                </legend>
                 {sizes.map(({ label, value }) => (
-                  <span
+                  <button
                     key={label}
                     className="size-btn"
                     style={{
                       backgroundColor: size === value ? 'white' : 'transparent',
-                      color: size === value ? 'black' : 'white'
+                      color: size === value ? 'black' : 'white',
                     }}
                     onClick={() => setSize(value)}
+                    aria-label={`Select ${label} inch iPhone`}
+                    aria-pressed={size === value}
+                    role="radio"
                   >
                     {label}
-                  </span>
+                  </button>
                 ))}
-              </button>
+              </fieldset>
             </div>
           </div>
         </div>
